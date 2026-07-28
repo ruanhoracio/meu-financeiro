@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS perfis (
   id UUID PRIMARY KEY,
   dono TEXT NOT NULL UNIQUE CHECK (dono IN ('eu', 'esposa')),
   nome TEXT NOT NULL,
+  avatar_url TEXT,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -188,3 +189,8 @@ ALTER TABLE lancamentos ADD CONSTRAINT lancamentos_tipo_check CHECK (tipo IN ('f
 -- MIGRAÇÃO: Adicionar coluna de origem
 -- =============================================
 ALTER TABLE lancamentos ADD COLUMN IF NOT EXISTS origem TEXT NOT NULL DEFAULT 'manual' CHECK (origem IN ('manual', 'cartao'));
+
+-- =============================================
+-- MIGRAÇÃO: Adicionar coluna de avatar
+-- =============================================
+ALTER TABLE perfis ADD COLUMN IF NOT EXISTS avatar_url TEXT;em IN ('manual', 'cartao'));

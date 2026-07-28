@@ -1,12 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useHideValues } from '@/contexts/HideValuesContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getCurrentMonth, formatCurrency } from '@/lib/utils'
-import { Save, User, CheckCircle, DollarSign } from 'lucide-react'
+import { Save, User, CheckCircle, DollarSign, Camera } from 'lucide-react'
 
 export default function PerfilPage() {
   const { user, loading, updateNome, signOut, currentView, setCurrentView } = useAuth()
@@ -17,14 +17,32 @@ export default function PerfilPage() {
   const [salario, setSalario] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
     if (user) {
       setNome(user.nome)
       loadSalario()
+      loadAvatar()
     }
   }, [user, loading, router])
+
+  async function loadAvatar() {
+    if (!user) return
+    const { data } = await supabase
+      .from('perfis')
+      .select('avatar_url')
+      .eq('dono', user.dono)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (data?.avatar_url) {
+      setAvatarUrl(data.avatar_url)
+    }
+  }
 
   async function loadSalario() {
     const dono = currentView === 'conjunto' ? 'eu' : currentView
@@ -37,6 +55,39 @@ export default function PerfilPage() {
       .single()
     if (data?.valor) {
       setSalario(data.valor.toString())
+    }
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.dono}-${Date.now()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      await supabase.from('perfis').upsert(
+        { id: user.id, dono: user.dono, nome: user.nome, avatar_url: publicUrl, updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      )
+
+      setAvatarUrl(publicUrl)
+    } catch (err) {
+      console.error('Erro ao enviar avatar:', err)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -76,15 +127,54 @@ export default function PerfilPage() {
       <div style={{ maxWidth: 520 }}>
         {/* Avatar Card */}
         <div className="card card-p" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{
-            width: 64, height: 64,
-            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
-            borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontWeight: 800, fontSize: '1.5rem',
-            flexShrink: 0,
-          }}>
-            {nome?.[0]?.toUpperCase() || 'U'}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Avatar"
+                style={{
+                  width: 64, height: 64,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <div style={{
+                width: 64, height: 64,
+                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontWeight: 800, fontSize: '1.5rem',
+              }}>
+                {nome?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                position: 'absolute', bottom: -2, right: -2,
+                width: 28, height: 28,
+                borderRadius: '50%',
+                border: '2px solid var(--color-bg)',
+                background: 'var(--color-primary)',
+                color: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', fontSize: 12,
+                padding: 0,
+              }}
+              title="Alterar foto"
+            >
+              {uploading ? '...' : <Camera size={14} />}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarUpload}
+            />
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-text)' }}>{nome || user?.nome}</div>
