@@ -84,8 +84,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
 <div className="sidebar-logo">
-            <img src="/logo.svg" alt="Meu Financeiro" style={{ height: 28, width: 'auto' }} />
-            <span className="sidebar-logo-text">Meu <span>Financeiro</span></span>
+            <img src="/logo.svg" alt="Meu Financeiro" style={{ height: 40, width: 'auto' }} />
           <button
             className="btn btn-ghost btn-icon sidebar-close-btn"
             onClick={() => setSidebarOpen(false)}
