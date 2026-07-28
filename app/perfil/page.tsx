@@ -66,26 +66,34 @@ export default function PerfilPage() {
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.dono}-${Date.now()}.${fileExt}`
-      const filePath = `avatars/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file)
+        .upload(fileName, file, { upsert: true })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw uploadError
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath)
+        .getPublicUrl(fileName)
 
-      await supabase.from('perfis').upsert(
+      const { error: dbError } = await supabase.from('perfis').upsert(
         { id: user.id, dono: user.dono, nome: user.nome, avatar_url: publicUrl, updated_at: new Date().toISOString() },
         { onConflict: 'id' }
       )
 
+      if (dbError) {
+        console.error('DB error:', dbError)
+        throw dbError
+      }
+
       setAvatarUrl(publicUrl)
     } catch (err) {
       console.error('Erro ao enviar avatar:', err)
+      alert('Erro ao enviar foto. Veja o console (F12) para detalhes.')
     } finally {
       setUploading(false)
     }
