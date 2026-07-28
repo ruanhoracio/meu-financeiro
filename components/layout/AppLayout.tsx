@@ -11,7 +11,8 @@ import {
   Moon, Sun, Menu, X, ChevronLeft, ChevronRight,
   Eye, EyeOff, UserCog, FileSpreadsheet,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 import { formatMonth } from '@/lib/utils'
 
 const navItems = [
@@ -34,6 +35,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { hidden, toggleHidden } = useHideValues()
   const { mes, ano, setMonth } = useMonth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) { setAvatarUrl(null); return }
+    supabase
+      .from('perfis')
+      .select('avatar_url')
+      .eq('dono', user.dono)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url)
+      })
+  }, [user])
 
   const prevMonth = () => {
     if (mes === 1) setMonth(12, ano - 1)
@@ -97,17 +113,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <div className="sidebar-footer">
           <div className="user-info" style={{ marginBottom: '0.75rem' }}>
-            <div style={{
-              width: 36, height: 36,
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 700, fontSize: '0.875rem',
-              marginBottom: '0.5rem',
-              flexShrink: 0,
-            }}>
-              {user?.nome?.[0]?.toUpperCase() || 'U'}
-            </div>
+{avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={user?.nome}
+                style={{
+                  width: 36, height: 36,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  marginBottom: '0.5rem',
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <div style={{
+                width: 36, height: 36,
+                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontWeight: 700, fontSize: '0.875rem',
+                marginBottom: '0.5rem',
+                flexShrink: 0,
+              }}>
+                {user?.nome?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
             <div>
               <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)' }}>
                 {user?.nome}
