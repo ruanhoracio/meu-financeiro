@@ -6,7 +6,7 @@ import { useHideValues } from '@/contexts/HideValuesContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getCurrentMonth, formatCurrency } from '@/lib/utils'
-import { Save, User, CheckCircle, DollarSign, Camera } from 'lucide-react'
+import { Save, User, CheckCircle, DollarSign, Camera, ZoomIn, Crop } from 'lucide-react'
 
 export default function PerfilPage() {
   const { user, loading, updateNome, signOut, currentView, setCurrentView } = useAuth()
@@ -19,6 +19,17 @@ export default function PerfilPage() {
   const [saved, setSaved] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+
+  // Crop state
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [cropImage, setCropImage] = useState<string | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const cropCanvasRef = useRef<HTMLCanvasElement>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -58,23 +69,76 @@ export default function PerfilPage() {
     }
   }
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !user) return
+    setCropFile(file)
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCropImage(reader.result as string)
+      setZoom(1)
+      setPan({ x: 0, y: 0 })
+      setShowCropModal(true)
+    }
+    reader.readAsDataURL(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
+  function handleMouseDown(e: React.MouseEvent) {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+  }
+
+  function handleMouseMove(e: React.MouseEvent) {
+    if (!isDragging) return
+    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+  }
+
+  function handleMouseUp() {
+    setIsDragging(false)
+  }
+
+  const CROP_SIZE = 250
+
+  function applyCrop(): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 256
+        canvas.height = 256
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { resolve(null); return }
+
+        const cropCenter = CROP_SIZE / 2
+        const srcX = cropCenter / zoom - (cropCenter - pan.x) / zoom
+        const srcY = cropCenter / zoom - (cropCenter - pan.y) / zoom
+        const srcSize = CROP_SIZE / zoom
+
+        ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, 256, 256)
+
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9)
+      }
+      img.src = cropImage || ''
+    })
+  }
+
+  async function confirmCrop() {
+    if (!cropFile || !user) return
     setUploading(true)
+    setShowCropModal(false)
     try {
-      const fileExt = file.name.split('.').pop()
+      const blob = await applyCrop()
+      if (!blob) throw new Error('Erro ao processar imagem')
+
+      const fileExt = cropFile.name.split('.').pop() || 'jpg'
       const fileName = `${user.dono}-${Date.now()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true })
+        .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' })
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError)
-        throw uploadError
-      }
+      if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
@@ -85,10 +149,7 @@ export default function PerfilPage() {
         { onConflict: 'id' }
       )
 
-      if (dbError) {
-        console.error('DB error:', dbError)
-        throw dbError
-      }
+      if (dbError) throw dbError
 
       setAvatarUrl(publicUrl)
     } catch (err) {
@@ -96,6 +157,8 @@ export default function PerfilPage() {
       alert('Erro ao enviar foto. Veja o console (F12) para detalhes.')
     } finally {
       setUploading(false)
+      setCropImage(null)
+      setCropFile(null)
     }
   }
 
@@ -133,7 +196,6 @@ export default function PerfilPage() {
       </div>
 
       <div style={{ maxWidth: 520 }}>
-        {/* Avatar Card */}
         <div className="card card-p" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{ position: 'relative', flexShrink: 0 }}>
             {avatarUrl ? (
@@ -181,7 +243,7 @@ export default function PerfilPage() {
               type="file"
               accept="image/*"
               style={{ display: 'none' }}
-              onChange={handleAvatarUpload}
+              onChange={handleFileSelect}
             />
           </div>
           <div>
@@ -192,7 +254,6 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        {/* Form Perfil */}
         <div className="card card-p" style={{ marginBottom: '1rem' }}>
           <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
             <User size={16} color="var(--color-primary)" />
@@ -249,7 +310,6 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        {/* Sessão */}
         <div className="card card-p" style={{ borderColor: '#FECACA' }}>
           <h3 style={{ fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-text)' }}>🔐 Sessão</h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
@@ -264,6 +324,76 @@ export default function PerfilPage() {
           </button>
         </div>
       </div>
+
+      {showCropModal && cropImage && (
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setShowCropModal(false); setCropImage(null) } }}>
+          <div className="modal" style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <h2 className="modal-title">Ajustar Foto</h2>
+              <button className="btn btn-ghost btn-icon" onClick={() => { setShowCropModal(false); setCropImage(null) }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  width: CROP_SIZE, height: CROP_SIZE,
+                  margin: '0 auto 1rem',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  background: '#000',
+                  userSelect: 'none',
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                <img
+                  ref={imageRef as any}
+                  src={cropImage}
+                  alt="Crop preview"
+                  draggable={false}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: `translate(calc(-50% + ${pan.x / zoom}px), calc(-50% + ${pan.y / zoom}px)) scale(${zoom})`,
+                    transformOrigin: 'center center',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    pointerEvents: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <ZoomIn size={16} color="var(--color-text-muted)" />
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.05"
+                  value={zoom}
+                  onChange={e => setZoom(parseFloat(e.target.value))}
+                  style={{ flex: 1 }}
+                />
+                <ZoomIn size={16} color="var(--color-text-muted)" />
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                Arraste para reposicionar · Zoom para ajustar
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => { setShowCropModal(false); setCropImage(null) }}>Cancelar</button>
+              <button className="btn btn-primary" onClick={confirmCrop} disabled={uploading}>
+                {uploading ? 'Salvando...' : 'Salvar Foto'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }
