@@ -7,7 +7,7 @@ import { useMonth } from '@/contexts/MonthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { ClipboardPaste, CheckCircle, AlertCircle, Save, Trash2, Calendar } from 'lucide-react'
+import { ClipboardPaste, CheckCircle, AlertCircle, Save, Trash2, Calendar, ArrowRight } from 'lucide-react'
 import type { Categoria } from '@/lib/database.types'
 
 type ParsedRow = {
@@ -195,7 +195,6 @@ function parseSheetText(raw: string, categorias: Categoria[], donoPadrao: string
         valor = parseCurrencyVal(cols[1])
       }
     } else {
-      // 1 single column string fallback parser
       let s = line.trim()
       const mMatch = s.match(/^(janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/i)
       if (mMatch) {
@@ -252,15 +251,18 @@ function parseSheetText(raw: string, categorias: Categoria[], donoPadrao: string
 
 export default function ImportarSheetsPage() {
   const { user, loading, currentView } = useAuth()
-  const { mes, ano } = useMonth()
+  const { mes, ano, setMonth } = useMonth()
   const { mask } = useHideValues()
   const router = useRouter()
   const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [selectedMes, setSelectedMes] = useState<number>(mes)
   const [rawText, setRawText] = useState('')
   const [rows, setRows] = useState<ParsedRow[]>([])
   const [parsed, setParsed] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [savedCount, setSavedCount] = useState(0)
+  const [savedMes, setSavedMes] = useState(mes)
   const [toast, setToast] = useState<{ msg: string; type: string } | null>(null)
 
   useEffect(() => {
@@ -273,9 +275,13 @@ export default function ImportarSheetsPage() {
     }
   }, [user])
 
+  useEffect(() => {
+    setSelectedMes(mes)
+  }, [mes])
+
   function handleParse() {
     if (!rawText.trim()) return
-    const r = parseSheetText(rawText, categorias, currentView === 'conjunto' ? 'conjunto' : currentView, mes)
+    const r = parseSheetText(rawText, categorias, currentView === 'conjunto' ? 'conjunto' : currentView, selectedMes)
     setRows(r)
     setParsed(true)
   }
@@ -284,28 +290,43 @@ export default function ImportarSheetsPage() {
     const toSave = rows.filter(r => r.valor > 0)
     if (!toSave.length) return
     setSaving(true)
+    
+    const realUserId = user?.id || '00000000-0000-0000-0000-000000000001'
+    const targetMes = toSave[0]?.mes || selectedMes
+
     const inserts = toSave.map(r => ({
-      user_id: user!.id,
+      user_id: realUserId,
       dono: r.dono,
-      mes: r.mes || mes,
-      ano,
+      mes: r.mes || targetMes,
+      ano: ano,
       categoria_id: r.categoria_id || null,
       descricao: r.descricao,
       valor: r.valor,
-      tipo: r.tipo,
-      status: r.status,
+      tipo: r.tipo || 'parcela_unica',
+      status: r.status || 'aguardando',
+      origem: 'manual',
       data_vencimento: null,
       parcela_atual: null,
       parcelas_total: null,
     }))
-    const { error } = await supabase.from('lancamentos').insert(inserts)
+
+    const { error } = await supabase.from('lancamentos').insert(inserts as any)
     setSaving(false)
+
     if (!error) {
       setSaved(true)
-      showToast(`${toSave.length} contas importadas com sucesso! 🎉`, 'success')
+      setSavedCount(toSave.length)
+      setSavedMes(targetMes)
+      showToast(`${toSave.length} contas importadas com sucesso para ${MESES_NOMES[targetMes]}! 🎉`, 'success')
     } else {
-      showToast('Erro ao importar. Tente novamente.', 'error')
+      console.error('Erro Supabase:', error)
+      showToast(`Erro ao importar: ${error.message || 'Tente novamente'}`, 'error')
     }
+  }
+
+  function handleGoToContas() {
+    setMonth(savedMes, ano)
+    router.push('/contas')
   }
 
   function showToast(msg: string, type: string) {
@@ -320,7 +341,7 @@ export default function ImportarSheetsPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Importar do Google Sheets / Planilha</h1>
-          <p className="page-subtitle">Cole suas contas da planilha em qualquer formato (ex: Mês, Nome, Valor, Status)</p>
+          <p className="page-subtitle">Cole suas contas da planilha para qualquer mês</p>
         </div>
       </div>
 
@@ -331,14 +352,31 @@ export default function ImportarSheetsPage() {
               📋 Como importar suas contas da planilha
             </div>
             <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-              <li>No Google Sheets ou Excel, selecione as linhas das suas contas.</li>
-              <li>Copie com <strong>Ctrl+C / Cmd+C</strong>.</li>
-              <li>Cole no campo abaixo com <strong>Ctrl+V / Cmd+V</strong>.</li>
-              <li>Clique em <strong>"Ler Planilha"</strong>.</li>
+              <li>Escolha abaixo para qual **Mês** deseja importar caso a planilha não tenha a coluna de Mês.</li>
+              <li>No Google Sheets ou Excel, selecione e copie as linhas com <strong>Ctrl+C / Cmd+C</strong>.</li>
+              <li>Cole no campo abaixo com <strong>Ctrl+V / Cmd+V</strong> e clique em <strong>"Ler Planilha"</strong>.</li>
             </ol>
           </div>
 
           <div className="card card-p" style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <label className="form-label" style={{ marginBottom: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <Calendar size={16} style={{ color: 'var(--color-primary)' }} />
+                Mês Padrão de Importação:
+              </label>
+              <select
+                id="select-mes-importacao"
+                className="form-select"
+                style={{ width: 'auto', padding: '0.4rem 0.75rem', fontWeight: 600 }}
+                value={selectedMes}
+                onChange={e => setSelectedMes(parseInt(e.target.value, 10))}
+              >
+                {MESES_NOMES.slice(1).map((mNome, idx) => (
+                  <option key={idx + 1} value={idx + 1}>{mNome} / {ano}</option>
+                ))}
+              </select>
+            </div>
+
             <label className="form-label" style={{ marginBottom: '0.75rem' }}>
               <ClipboardPaste size={14} style={{ display: 'inline', marginRight: '0.375rem', color: 'var(--color-primary)' }} />
               Cole o conteúdo copiado da sua planilha aqui
@@ -347,7 +385,7 @@ export default function ImportarSheetsPage() {
               id="textarea-sheets-paste"
               className="form-input"
               style={{ minHeight: 220, fontFamily: 'monospace', fontSize: '0.85rem', resize: 'vertical' }}
-              placeholder={`Exemplo de dados que você pode colar:\n\nMAIO\tInvestir\tR$ 300,00\tPAGO\nMAIO\tBS\tR$ 500,00\tPAGO\nMAIO\tApartamento\tR$ 631,00\tPAGO\nMAIO\tCarro\tR$ 800,00\tPAGO\nMAIO\tLuz\tR$ 228,00\tPAGO`}
+              placeholder={`Exemplo de dados colados:\n\nJANEIRO\tInvestir\tR$ 300,00\tPAGO\nJANEIRO\tBS\tR$ 500,00\tPAGO\nJANEIRO\tApartamento\tR$ 631,00\tPAGO\n\nOU apenas:\nInvestir\tR$ 300,00\tPAGO\nSupermercado\tR$ 450,00\tAguardando`}
               value={rawText}
               onChange={e => setRawText(e.target.value)}
             />
@@ -508,9 +546,18 @@ export default function ImportarSheetsPage() {
                 {saving ? 'Salvando...' : `Importar ${rows.length} contas`}
               </button>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-status-pago)', fontWeight: 600, fontSize: '0.875rem' }}>
-                <CheckCircle size={18} />
-                Importado com sucesso! <a href="/contas" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Ver contas →</a>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-status-pago)', fontWeight: 600, fontSize: '0.875rem' }}>
+                  <CheckCircle size={18} />
+                  {savedCount} contas importadas para {MESES_NOMES[savedMes]}! 🎉
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleGoToContas}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
+                >
+                  Ir para Contas de {MESES_NOMES[savedMes]} <ArrowRight size={16} />
+                </button>
               </div>
             )}
           </div>
