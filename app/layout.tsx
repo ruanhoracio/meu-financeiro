@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   keywords: 'finanças pessoais, controle financeiro, orçamento, gastos, metas, casal',
   icons: {
     icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Meu Financeiro',
   },
 }
 
