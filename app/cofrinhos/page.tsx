@@ -98,7 +98,7 @@ export default function CofrinhosPage() {
     setSaving(false)
     if (error) {
       console.error('Erro ao salvar cofrinho:', error)
-      showToast('Erro ao salvar!', 'error')
+      showToast('Erro: ' + (error?.message || 'desconhecido'), 'error')
       return
     }
     showToast(editId ? 'Cofrinho atualizado! ✏️' : 'Cofrinho criado! 🎉', 'success')
