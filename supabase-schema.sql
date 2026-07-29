@@ -213,7 +213,7 @@ SET valor_atual = COALESCE(
 -- FUNCAO: Salvar cofrinho (insere ou atualiza)
 -- =============================================
 CREATE OR REPLACE FUNCTION salvar_cofrinho(
-  p_id UUID DEFAULT NULL,
+  p_id UUID,
   p_nome TEXT,
   p_icone TEXT DEFAULT '🏆',
   p_cor TEXT DEFAULT '#820AD1',
@@ -247,7 +247,7 @@ $$ LANGUAGE plpgsql;
 -- FUNCAO: Salvar cofrinho (insere ou atualiza)
 -- =============================================
 CREATE OR REPLACE FUNCTION salvar_cofrinho(
-  p_id UUID DEFAULT NULL,
+  p_id UUID,
   p_nome TEXT,
   p_icone TEXT DEFAULT 'trophy',
   p_cor TEXT DEFAULT '#820AD1',
