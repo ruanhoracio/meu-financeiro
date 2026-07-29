@@ -87,24 +87,43 @@ export default function CofrinhosPage() {
       data_fim: dataFim || null,
       descricao: descricao || null,
     }
-    let error = null
-    if (editId) {
-      const res = await supabase.from('cofrinhos').update(payload).eq('id', editId)
-      error = res.error
-    } else {
-      const res = await supabase.from('cofrinhos').insert({ ...payload, valor_atual: 0 })
-      error = res.error
+    try {
+      const token = (await supabase.auth.getSession()).data.session?.access_token
+      const headers = {
+        'Content-Type': 'application/json',
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        'Authorization': token ? 'Bearer ' + token : '',
+        'Prefer': 'return=minimal',
+      }
+      const base = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kuuocgrbbfjyjhwfzwbd.supabase.co'
+      let res
+      if (editId) {
+        res = await fetch(base + '/rest/v1/cofrinhos?id=eq.' + editId, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload),
+        })
+      } else {
+        res = await fetch(base + '/rest/v1/cofrinhos', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ ...payload, valor_atual: 0 }),
+        })
+      }
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text)
+      }
+      setSaving(false)
+      showToast(editId ? 'Cofrinho atualizado! ✏️' : 'Cofrinho criado! 🎉', 'success')
+      setShowModal(false)
+      resetForm()
+      loadCofrinhos()
+    } catch (err: any) {
+      setSaving(false)
+      console.error('Erro ao salvar cofrinho:', err)
+      showToast('Erro: ' + (err?.message || 'desconhecido'), 'error')
     }
-    setSaving(false)
-    if (error) {
-      console.error('Erro ao salvar cofrinho:', error)
-      showToast('Erro: ' + (error?.message || 'desconhecido'), 'error')
-      return
-    }
-    showToast(editId ? 'Cofrinho atualizado! ✏️' : 'Cofrinho criado! 🎉', 'success')
-    setShowModal(false)
-    resetForm()
-    loadCofrinhos()
   }
 
   async function saveAporte() {
