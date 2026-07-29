@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Aplicativo de controle financeiro pessoal e do casal. Gerencie gastos, metas e extratos bancários em um só lugar.',
   keywords: 'finanças pessoais, controle financeiro, orçamento, gastos, metas, casal',
   icons: {
-    icon: '/logo.svg',
+    icon: '/logo.png',
     apple: '/icons/icon-180x180.png',
   },
   manifest: '/manifest.json',
