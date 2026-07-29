@@ -208,3 +208,71 @@ SET valor_atual = COALESCE(
   (SELECT SUM(valor) FROM aportes_cofrinhos WHERE cofrinho_id = c.id),
   0
 );
+
+-- =============================================
+-- FUNCAO: Salvar cofrinho (insere ou atualiza)
+-- =============================================
+CREATE OR REPLACE FUNCTION salvar_cofrinho(
+  p_id UUID DEFAULT NULL,
+  p_nome TEXT,
+  p_icone TEXT DEFAULT '🏆',
+  p_cor TEXT DEFAULT '#820AD1',
+  p_valor_alvo DECIMAL,
+  p_data_fim DATE DEFAULT NULL,
+  p_descricao TEXT DEFAULT NULL
+) RETURNS SETOF cofrinhos AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  IF p_id IS NULL THEN
+    INSERT INTO cofrinhos (nome, icone, cor, valor_alvo, valor_atual, data_fim, descricao)
+    VALUES (p_nome, p_icone, p_cor, p_valor_alvo, 0, p_data_fim, p_descricao)
+    RETURNING id INTO v_id;
+  ELSE
+    UPDATE cofrinhos SET
+      nome = p_nome,
+      icone = p_icone,
+      cor = p_cor,
+      valor_alvo = p_valor_alvo,
+      data_fim = p_data_fim,
+      descricao = p_descricao
+    WHERE id = p_id;
+    v_id := p_id;
+  END IF;
+  RETURN QUERY SELECT * FROM cofrinhos WHERE id = v_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================
+-- FUNCAO: Salvar cofrinho (insere ou atualiza)
+-- =============================================
+CREATE OR REPLACE FUNCTION salvar_cofrinho(
+  p_id UUID DEFAULT NULL,
+  p_nome TEXT,
+  p_icone TEXT DEFAULT 'trophy',
+  p_cor TEXT DEFAULT '#820AD1',
+  p_valor_alvo DECIMAL,
+  p_data_fim DATE DEFAULT NULL,
+  p_descricao TEXT DEFAULT NULL
+) RETURNS SETOF cofrinhos AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  IF p_id IS NULL THEN
+    INSERT INTO cofrinhos (nome, icone, cor, valor_alvo, valor_atual, data_fim, descricao)
+    VALUES (p_nome, p_icone, p_cor, p_valor_alvo, 0, p_data_fim, p_descricao)
+    RETURNING id INTO v_id;
+  ELSE
+    UPDATE cofrinhos SET
+      nome = p_nome,
+      icone = p_icone,
+      cor = p_cor,
+      valor_alvo = p_valor_alvo,
+      data_fim = p_data_fim,
+      descricao = p_descricao
+    WHERE id = p_id;
+    v_id := p_id;
+  END IF;
+  RETURN QUERY SELECT * FROM cofrinhos WHERE id = v_id;
+END;
+$$ LANGUAGE plpgsql;

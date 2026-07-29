@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { formatCurrency, getCurrentMonth } from '@/lib/utils'
 import { Plus, Trash2, Pencil, TrendingUp, Clock, Target, Calendar } from 'lucide-react'
 import type { Cofrinho, AporteCofrinho } from '@/lib/database.types'
@@ -79,51 +79,25 @@ export default function CofrinhosPage() {
   async function handleSave() {
     if (!nome || !valorAlvo) return
     setSaving(true)
-    const payload = {
-      nome,
-      icone,
-      cor,
-      valor_alvo: parseFloat(valorAlvo),
-      data_fim: dataFim || null,
-      descricao: descricao || null,
+    const { error } = await supabase.rpc('salvar_cofrinho', {
+      p_id: editId,
+      p_nome: nome,
+      p_icone: icone,
+      p_cor: cor,
+      p_valor_alvo: parseFloat(valorAlvo),
+      p_data_fim: dataFim || null,
+      p_descricao: descricao || null,
+    })
+    setSaving(false)
+    if (error) {
+      console.error('Erro ao salvar cofrinho:', error)
+      showToast('Erro: ' + (error?.message || 'desconhecido'), 'error')
+      return
     }
-    try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token
-      const headers = {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': token ? 'Bearer ' + token : '',
-        'Prefer': 'return=minimal',
-      }
-      const base = SUPABASE_URL
-      let res
-      if (editId) {
-        res = await fetch(base + '/rest/v1/cofrinhos?id=eq.' + editId, {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify(payload),
-        })
-      } else {
-        res = await fetch(base + '/rest/v1/cofrinhos', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ ...payload, valor_atual: 0 }),
-        })
-      }
-      if (!res.ok) {
-        const text = await res.text()
-        throw new Error(text)
-      }
-      setSaving(false)
-      showToast(editId ? 'Cofrinho atualizado! ✏️' : 'Cofrinho criado! 🎉', 'success')
-      setShowModal(false)
-      resetForm()
-      loadCofrinhos()
-    } catch (err: any) {
-      setSaving(false)
-      console.error('Erro ao salvar cofrinho:', err)
-      showToast('Erro: ' + (err?.message || 'desconhecido'), 'error')
-    }
+    showToast(editId ? 'Cofrinho atualizado!' : 'Cofrinho criado!', 'success')
+    setShowModal(false)
+    resetForm()
+    loadCofrinhos()
   }
 
   async function saveAporte() {
