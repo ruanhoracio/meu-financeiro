@@ -215,9 +215,9 @@ SET valor_atual = COALESCE(
 CREATE OR REPLACE FUNCTION salvar_cofrinho(
   p_id UUID,
   p_nome TEXT,
+  p_valor_alvo DECIMAL,
   p_icone TEXT DEFAULT '🏆',
   p_cor TEXT DEFAULT '#820AD1',
-  p_valor_alvo DECIMAL,
   p_data_fim DATE DEFAULT NULL,
   p_descricao TEXT DEFAULT NULL
 ) RETURNS SETOF cofrinhos AS $$
