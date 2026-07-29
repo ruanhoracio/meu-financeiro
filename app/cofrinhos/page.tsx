@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase'
 import { formatCurrency, getCurrentMonth } from '@/lib/utils'
 import { Plus, Trash2, Pencil, TrendingUp, Clock, Target, Calendar } from 'lucide-react'
 import type { Cofrinho, AporteCofrinho } from '@/lib/database.types'
@@ -91,11 +91,11 @@ export default function CofrinhosPage() {
       const token = (await supabase.auth.getSession()).data.session?.access_token
       const headers = {
         'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        'apikey': SUPABASE_ANON_KEY,
         'Authorization': token ? 'Bearer ' + token : '',
         'Prefer': 'return=minimal',
       }
-      const base = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kuuocgrbbfjyjhwfzwbd.supabase.co'
+      const base = SUPABASE_URL
       let res
       if (editId) {
         res = await fetch(base + '/rest/v1/cofrinhos?id=eq.' + editId, {
