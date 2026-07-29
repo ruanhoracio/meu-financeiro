@@ -22,7 +22,6 @@ export default function CofrinhosPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type: string } | null>(null)
   const [editingCofrinho, setEditingCofrinho] = useState<Cofrinho | null>(null)
-  const [editForm, setEditForm] = useState({ nome: '', icone: '🏆', cor: '#820AD1', valor_alvo: '', data_fim: '', descricao: '' })
 
   const ICONES_COFRINHO = ['🏆','✈️','🏠','🚗','📱','💻','🎓','💍','🐣','🏖️','🛍️','💰','🎯','🏋️','🎪']
   const CORES = ['#820AD1','#10B981','#EF4444','#F59E0B','#3B82F6','#EC4899','#06B6D4','#F97316']
@@ -280,32 +279,17 @@ export default function CofrinhosPage() {
                     <Clock size={12} />
                     Estimativa: {estimarTempo(c)}
                   </div>
-                  {c.data_fim && !concluido && (() => {
-                    const hoje = new Date()
-                    const dataFim = new Date(c.data_fim)
-                    if (dataFim > hoje) {
-                      const resto = c.valor_alvo - c.valor_atual
-                      if (resto > 0) {
-                        const diffMs = dataFim.getTime() - hoje.getTime()
-                        const mesesRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30.44))
-                        if (mesesRestantes > 0) {
-                          const mensal = resto / mesesRestantes
-                          return (
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: '0.25rem',
-                              fontSize: '0.75rem', fontWeight: 700, color: c.cor || 'var(--color-primary)',
-                              padding: '0.35rem 0.6rem',
-                              background: 'var(--color-primary-muted)', borderRadius: 8
-                            }}>
-                              <Target size={12} />
-                              {formatCurrency(mensal)}/mês
-                            </div>
-                          )
-                        }
-                      }
-                    }
-                    return null
-                  })()}
+                  {calcularMetaMensal(c) && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '0.25rem',
+                      fontSize: '0.75rem', fontWeight: 700, color: c.cor || 'var(--color-primary)',
+                      padding: '0.35rem 0.6rem',
+                      background: 'var(--color-primary-muted)', borderRadius: 8
+                    }}>
+                      <Target size={12} />
+                      {calcularMetaMensal(c)}
+                    </div>
+                  )}
                 </div>
 
                 <button

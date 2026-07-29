@@ -110,12 +110,23 @@ export default function PerfilPage() {
         const ctx = canvas.getContext('2d')
         if (!ctx) { resolve(null); return }
 
-        const cropCenter = CROP_SIZE / 2
-        const srcX = cropCenter / zoom - (cropCenter - pan.x) / zoom
-        const srcY = cropCenter / zoom - (cropCenter - pan.y) / zoom
-        const srcSize = CROP_SIZE / zoom
+        const imgW = img.naturalWidth
+        const imgH = img.naturalHeight
+        const containerSize = CROP_SIZE
 
-        ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, 256, 256)
+        const scale = Math.max(containerSize / imgW, containerSize / imgH)
+        const dispW = imgW * scale
+        const dispH = imgH * scale
+        const offsetX = (containerSize - dispW) / 2
+        const offsetY = (containerSize - dispH) / 2
+
+        const zoomedSize = containerSize / zoom
+        const sx = Math.max(0, (containerSize / 2 - zoomedSize / 2 - pan.x + offsetX) / scale)
+        const sy = Math.max(0, (containerSize / 2 - zoomedSize / 2 - pan.y + offsetY) / scale)
+        const sw = Math.min(imgW - sx, zoomedSize / scale)
+        const sh = Math.min(imgH - sy, zoomedSize / scale)
+
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 256, 256)
 
         canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9)
       }
