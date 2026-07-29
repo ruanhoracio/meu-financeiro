@@ -54,6 +54,9 @@ export type Database = {
           cor: string | null
           valor_alvo: number
           valor_atual: number
+          descricao: string | null
+          concluido: boolean | null
+          data_fim: string | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['cofrinhos']['Row'], 'id' | 'created_at'>

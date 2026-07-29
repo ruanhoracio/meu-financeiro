@@ -193,4 +193,18 @@ ALTER TABLE lancamentos ADD COLUMN IF NOT EXISTS origem TEXT NOT NULL DEFAULT 'm
 -- =============================================
 -- MIGRAÇÃO: Adicionar coluna de avatar
 -- =============================================
-ALTER TABLE perfis ADD COLUMN IF NOT EXISTS avatar_url TEXT;em IN ('manual', 'cartao'));
+ALTER TABLE perfis ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+-- =============================================
+-- MIGRAÇÃO: Adicionar data_fim nos cofrinhos
+-- =============================================
+ALTER TABLE cofrinhos ADD COLUMN IF NOT EXISTS data_fim DATE DEFAULT NULL;
+
+-- =============================================
+-- MIGRAÇÃO: Sincronizar valor_atual existente com aportes
+-- =============================================
+UPDATE cofrinhos c
+SET valor_atual = COALESCE(
+  (SELECT SUM(valor) FROM aportes_cofrinhos WHERE cofrinho_id = c.id),
+  0
+);
