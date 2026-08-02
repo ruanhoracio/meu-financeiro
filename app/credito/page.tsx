@@ -7,11 +7,16 @@ import { useHideValues } from '@/contexts/HideValuesContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { Check, Trash2, Pencil } from 'lucide-react'
+import { Check, Trash2, Pencil, Upload, RotateCcw, CheckCircle2, CreditCard } from 'lucide-react'
 import type { Lancamento, Categoria } from '@/lib/database.types'
 
 const DONOS = ['eu', 'esposa'] as const
 const DONO_LABELS = { eu: 'Ruan', esposa: 'Karol' }
+
+const MESES_NOMES = [
+  '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+]
 
 export default function CreditoPage() {
   const { user, loading } = useAuth()
@@ -51,6 +56,51 @@ export default function CreditoPage() {
     loadData()
   }
 
+  async function payAllCartao(dono: 'eu' | 'esposa') {
+    const donoNome = DONO_LABELS[dono]
+    if (!confirm(`Marcar TODAS as compras do cartão de ${donoNome} como PAGAS em ${MESES_NOMES[mes]}?`)) return
+
+    const { error } = await supabase
+      .from('lancamentos')
+      .update({ status: 'pago' })
+      .eq('mes', mes)
+      .eq('ano', ano)
+      .eq('dono', dono)
+      .eq('origem', 'cartao')
+
+    if (!error) {
+      showToast(`Fatura do cartão de ${donoNome} marcada como PAGA! 🎉`, 'success')
+      loadData()
+    } else {
+      showToast('Erro ao atualizar status. Tente novamente.', 'error')
+    }
+  }
+
+  async function zerarCartao(dono?: 'eu' | 'esposa') {
+    const targetText = dono ? `do cartão de ${DONO_LABELS[dono]}` : 'de TODOS os cartões'
+    if (!confirm(`Tem certeza que deseja zerar/apagar os lançamentos ${targetText} em ${MESES_NOMES[mes]}? Você poderá importar o extrato novamente.`)) return
+
+    let query = supabase
+      .from('lancamentos')
+      .delete()
+      .eq('mes', mes)
+      .eq('ano', ano)
+      .eq('origem', 'cartao')
+
+    if (dono) {
+      query = query.eq('dono', dono)
+    }
+
+    const { error } = await query
+
+    if (!error) {
+      showToast(`Fatura ${targetText} zerada com sucesso! 🧹`, 'success')
+      loadData()
+    } else {
+      showToast('Erro ao zerar fatura. Tente novamente.', 'error')
+    }
+  }
+
   async function deleteLancamento(id: string) {
     if (!confirm('Remover este lançamento?')) return
     await supabase.from('lancamentos').delete().eq('id', id)
@@ -68,10 +118,27 @@ export default function CreditoPage() {
 
   return (
     <AppLayout>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 className="page-title">Cartão de Crédito</h1>
-          <p className="page-subtitle">Fatura do mês — importada do Nubank</p>
+          <p className="page-subtitle">Faturas de Ruan & Karol — {MESES_NOMES[mes]} / {ano}</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => zerarCartao()}
+            title="Zerar todas as faturas deste mês"
+          >
+            <RotateCcw size={16} />
+            Zerar Cartões ({MESES_NOMES[mes]})
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => router.push('/importar')}
+          >
+            <Upload size={16} />
+            Importar Extrato
+          </button>
         </div>
       </div>
 
@@ -79,6 +146,9 @@ export default function CreditoPage() {
         {DONOS.map(dono => {
           const items = porDono(dono)
           const total = items.reduce((s, l) => s + Number(l.valor), 0)
+          const pendentesCount = items.filter(i => i.status !== 'pago').length
+          const allPaid = items.length > 0 && pendentesCount === 0
+
           return (
             <div key={dono} className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{
@@ -87,15 +157,59 @@ export default function CreditoPage() {
                 color: 'white',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
-                  💳 {DONO_LABELS[dono]}
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <CreditCard size={18} /> {DONO_LABELS[dono]}
                 </h2>
                 <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>{mask(formatCurrency(total))}</span>
               </div>
 
+              {items.length > 0 && (
+                <div style={{
+                  padding: '0.6rem 1.25rem',
+                  background: 'var(--color-bg-subtle, rgba(0,0,0,0.02))',
+                  borderBottom: '1px solid var(--color-border)',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  flexWrap: 'wrap', gap: '0.5rem'
+                }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                    {allPaid ? '✅ Fatura Totalmente Paga' : `${pendentesCount} item(ns) a pagar`}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {!allPaid && (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => payAllCartao(dono)}
+                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
+                      >
+                        <CheckCircle2 size={13} />
+                        Pagar Cartão Completo
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => zerarCartao(dono)}
+                      style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: 'var(--color-status-aguardando)' }}
+                      title="Zerar fatura deste cartão"
+                    >
+                      <RotateCcw size={13} />
+                      Zerar
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {items.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
                   Nenhuma compra no cartão este mês.
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => router.push('/importar')}
+                    >
+                      <Upload size={14} /> Subir Extrato
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
