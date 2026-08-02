@@ -9,7 +9,7 @@ import {
   LayoutDashboard, CreditCard, Tag, Clock,
   PiggyBank, Upload, FileBarChart, LogOut,
   Moon, Sun, Menu, X, ChevronLeft, ChevronRight,
-  Eye, EyeOff, UserCog, FileSpreadsheet,
+  Eye, EyeOff, UserCog, FileSpreadsheet, Briefcase,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -21,6 +21,7 @@ const navItems = [
   { href: '/credito',         icon: CreditCard,       label: 'Cartão de Crédito' },
   { href: '/importar',        icon: Upload,           label: 'Importar Extrato Nubank' },
   { href: '/importar-sheets', icon: FileSpreadsheet,  label: 'Importar Google Sheets' },
+  { href: '/freelas',         icon: Briefcase,        label: 'Freelas' },
   { href: '/categorias',      icon: Tag,              label: 'Categorias' },
   { href: '/historico',       icon: Clock,            label: 'Histórico' },
   { href: '/cofrinhos',       icon: PiggyBank,        label: 'Cofrinhos de Metas' },
@@ -64,9 +65,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const showViewSwitcher = !['/categorias', '/cofrinhos', '/perfil', '/credito'].includes(pathname)
 
   const viewLabels = {
-    eu:       user?.dono === 'eu' ? (user?.nome || 'Eu') : 'Acesso dele',
-    esposa:   user?.dono === 'esposa' ? (user?.nome || 'Karol') : 'Acesso Karol',
-    conjunto: 'Conjunto',
+    eu:       user?.dono === 'eu' ? (user?.nome || 'Ruan') : 'Ruan',
+    esposa:   user?.dono === 'esposa' ? (user?.nome || 'Karol') : 'Karol',
+    conjunto: 'Conjunto (Ruan & Karol)',
   }
 
   return (
@@ -84,7 +85,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
 <div className="sidebar-logo">
-            <img src="/logo.svg" alt="Meu Financeiro" style={{ width: '100%', maxWidth: 200, height: 'auto', display: 'block' }} />
+          <div className="sidebar-logo-novacash">
+            <div className="novacash-icon-wrap">
+              <div className="novacash-icon-inner">
+                <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>$</span>
+              </div>
+            </div>
+            <span className="novacash-text">novacash</span>
+          </div>
           <button
             className="btn btn-ghost btn-icon sidebar-close-btn"
             onClick={() => setSidebarOpen(false)}

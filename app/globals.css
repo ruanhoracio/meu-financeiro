@@ -1,36 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-/* =============================================
-   DESIGN SYSTEM — MEU FINANCEIRO
-   Paleta inspirada no Nubank
-   ============================================= */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Cores Primárias */
-  --color-primary: #820AD1;
-  --color-primary-hover: #9B30E8;
-  --color-primary-dark: #6008A8;
-  --color-primary-light: #EDD9FA;
-  --color-primary-muted: rgba(130, 10, 209, 0.1);
+  --color-primary: #D97706;
+  --color-primary-hover: #F59E0B;
+  --color-primary-dark: #B45309;
+  --color-primary-light: #FEF3C7;
+  --color-primary-muted: rgba(217, 119, 6, 0.1);
 
-  /* Background */
-  --color-bg: #F8F7FC;
+  --color-bg: #FAFAF9;
   --color-bg-card: #FFFFFF;
   --color-bg-sidebar: #FFFFFF;
-  --color-bg-hover: #F3F0FA;
+  --color-bg-hover: #FEF3C7;
   --color-bg-input: #FFFFFF;
 
-  /* Texto */
-  --color-text: #1A1A1A;
-  --color-text-secondary: #4B5563;
-  --color-text-muted: #9CA3AF;
+  --color-text: #1C1917;
+  --color-text-secondary: #57534E;
+  --color-text-muted: #A8A29E;
   --color-text-on-primary: #FFFFFF;
 
-  /* Bordas */
-  --color-border: #E5E7EB;
-  --color-border-focus: #820AD1;
+  --color-border: #E7E5E4;
+  --color-border-focus: #D97706;
 
-  /* Status */
   --color-status-pago: #16A34A;
   --color-status-pago-bg: #DCFCE7;
   --color-status-pago-text: #15803D;
@@ -41,14 +31,12 @@
   --color-status-proximo-bg: #DBEAFE;
   --color-status-proximo-text: #1D4ED8;
 
-  /* Sombras */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
-  --shadow-primary: 0 4px 20px rgba(130, 10, 209, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --shadow-primary: 0 4px 16px rgba(217,119,6,0.25);
 
-  /* Tipografia */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -57,60 +45,54 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
 
-  /* Raios */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Transições */
   --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Layout */
   --sidebar-width: 240px;
   --header-height: 64px;
 }
 
-/* =============================================
-   MODO ESCURO
-   ============================================= */
 [data-theme="dark"] {
-  --color-primary: #A855F7;
-  --color-primary-hover: #C084FC;
-  --color-primary-dark: #7E22CE;
-  --color-primary-light: #3B0764;
-  --color-primary-muted: rgba(168, 85, 247, 0.15);
+  --color-primary: #FBBF24;
+  --color-primary-hover: #FCD34D;
+  --color-primary-dark: #D97706;
+  --color-primary-light: #451A03;
+  --color-primary-muted: rgba(251, 191, 36, 0.15);
 
-  --color-bg: #0F0D14;
-  --color-bg-card: #1A1625;
-  --color-bg-sidebar: #13101E;
-  --color-bg-hover: #221B33;
-  --color-bg-input: #1A1625;
+  --color-bg: #171717;
+  --color-bg-card: rgba(255,255,255,0.04);
+  --color-bg-sidebar: rgba(23,23,23,0.95);
+  --color-bg-hover: rgba(255,255,255,0.07);
+  --color-bg-input: rgba(255,255,255,0.06);
 
-  --color-text: #F3F4F6;
-  --color-text-secondary: #9CA3AF;
-  --color-text-muted: #6B7280;
-  --color-text-on-primary: #FFFFFF;
+  --color-text: #F5F5F4;
+  --color-text-secondary: #A8A29E;
+  --color-text-muted: #78716C;
+  --color-text-on-primary: #1C1917;
 
-  --color-border: #2D2340;
-  --color-border-focus: #A855F7;
+  --color-border: rgba(255,255,255,0.1);
+  --color-border-focus: #FBBF24;
 
   --color-status-pago: #4ADE80;
-  --color-status-pago-bg: rgba(74, 222, 128, 0.15);
+  --color-status-pago-bg: rgba(74, 222, 128, 0.12);
   --color-status-pago-text: #4ADE80;
-  --color-status-aguardando: #FDE047;
-  --color-status-aguardando-bg: rgba(253, 224, 71, 0.15);
-  --color-status-aguardando-text: #FDE047;
+  --color-status-aguardando: #FBBF24;
+  --color-status-aguardando-bg: rgba(251, 191, 36, 0.12);
+  --color-status-aguardando-text: #FBBF24;
   --color-status-proximo: #60A5FA;
-  --color-status-proximo-bg: rgba(96, 165, 250, 0.15);
+  --color-status-proximo-bg: rgba(96, 165, 250, 0.12);
   --color-status-proximo-text: #60A5FA;
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
-  --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
-  --shadow-primary: 0 4px 20px rgba(168, 85, 247, 0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+  --shadow-primary: 0 4px 20px rgba(251,191,36,0.2);
 }
 
 /* =============================================
@@ -159,6 +141,11 @@ body {
   transition: background-color var(--transition-slow), border-color var(--transition-slow);
 }
 
+[data-theme="dark"] .app-sidebar {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 .app-main {
   margin-left: var(--sidebar-width);
   flex: 1;
@@ -178,8 +165,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: background-color var(--transition-slow);
+}
+
+[data-theme="dark"] .app-header {
+  background: rgba(23,23,23,0.8);
 }
 
 .app-content {
@@ -196,32 +188,61 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.25rem 1.25rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
 }
 
-.sidebar-logo-icon {
+.sidebar-logo-novacash {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.novacash-icon-wrap {
   width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-  border-radius: var(--radius-sm);
+  height: 28px;
+  border-radius: 10px;
+  background: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 18px;
-  box-shadow: var(--shadow-primary);
+  flex-shrink: 0;
 }
 
-.sidebar-logo-text {
-  font-size: var(--font-size-base);
+.novacash-icon-inner {
+  width: 26px;
+  height: 18px;
+  background: #171717;
+  border-radius: 7px;
+  transform: rotate(-8deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-hover);
+}
+
+.novacash-text {
+  font-size: 1.15rem;
   font-weight: 700;
+  letter-spacing: -0.5px;
   color: var(--color-text);
-  letter-spacing: -0.3px;
 }
 
-.sidebar-logo-text span {
-  color: var(--color-primary);
+[data-theme="dark"] .novacash-text {
+  color: #FDE68A;
+}
+
+[data-theme="dark"] .novacash-icon-inner {
+  background: #0A0A0A;
+}
+
+[data-theme="dark"] .novacash-icon-wrap {
+  background: #FBBF24;
+}
+
+[data-theme="dark"] .novacash-icon-inner {
+  color: #FCD34D;
 }
 
 .sidebar-nav {
@@ -297,6 +318,11 @@ body {
   transition: box-shadow var(--transition), border-color var(--transition);
 }
 
+[data-theme="dark"] .card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 .card:hover {
   box-shadow: var(--shadow-md);
 }
@@ -325,6 +351,11 @@ body {
   transition: all var(--transition);
   position: relative;
   overflow: hidden;
+}
+
+[data-theme="dark"] .summary-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .summary-card::before {
@@ -409,7 +440,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(130, 10, 209, 0.4);
+  box-shadow: 0 6px 24px rgba(217, 119, 6, 0.4);
 }
 
 .btn-primary:active {
@@ -731,8 +762,8 @@ body {
 
 .view-tab.active {
   background: var(--color-primary);
-  color: white;
-  box-shadow: 0 2px 8px rgba(130, 10, 209, 0.3);
+  color: var(--color-text-on-primary);
+  box-shadow: 0 2px 8px var(--color-primary-muted);
 }
 
 .view-tab:not(.active):hover {
@@ -869,6 +900,11 @@ body {
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition);
+}
+
+[data-theme="dark"] .cofrinho-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .cofrinho-card:hover {

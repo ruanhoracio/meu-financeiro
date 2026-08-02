@@ -31,8 +31,8 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 const PROFILES = {
-  eu:     { email: 'eu@meufinanceiro.com',     dono: 'eu'     as const, defaultNome: 'Eu'     },
-  esposa: { email: 'esposa@meufinanceiro.com', dono: 'esposa' as const, defaultNome: 'Esposa' },
+  eu:     { email: 'eu@meufinanceiro.com',     dono: 'eu'     as const, defaultNome: 'Ruan'  },
+  esposa: { email: 'esposa@meufinanceiro.com', dono: 'esposa' as const, defaultNome: 'Karol' },
 }
 
 const PASSWORDS = ['MeuFinanceiro2025!', '123456', '12345678', 'password123']
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadUserProfile(id: string, email: string) {
     const dono = email.includes('esposa') ? 'esposa' : 'eu'
-    const defaultNome = dono === 'esposa' ? 'Esposa' : 'Eu'
+    const defaultNome = dono === 'esposa' ? 'Karol' : 'Ruan'
 
     // Buscar perfil pelo dono no Supabase (campo único por usuário)
     const { data: perfil } = await supabase

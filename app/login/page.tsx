@@ -68,12 +68,12 @@ export default function LoginPage() {
               disabled={loggingIn !== null}
               className="login-profile-btn"
             >
-              <span className="login-profile-avatar" style={{ background: 'linear-gradient(135deg, #820AD1, #A855F7)' }}>
+              <span className="login-profile-avatar" style={{ background: 'linear-gradient(135deg, #D97706, #F59E0B)' }}>
                 👤
               </span>
               <div className="login-profile-info">
-                <span className="login-profile-name">Meu Portal</span>
-                <span className="login-profile-sub">Minhas contas e finanças</span>
+                <span className="login-profile-name">Ruan</span>
+                <span className="login-profile-sub">Contas e finanças do Ruan</span>
               </div>
               {loggingIn === 'eu' ? (
                 <span className="login-spinner" />
@@ -92,8 +92,8 @@ export default function LoginPage() {
                 👩
               </span>
               <div className="login-profile-info">
-                <span className="login-profile-name">Portal da Esposa</span>
-                <span className="login-profile-sub">Contas e finanças dela</span>
+                <span className="login-profile-name">Karol</span>
+                <span className="login-profile-sub">Contas e finanças da Karol</span>
               </div>
               {loggingIn === 'esposa' ? (
                 <span className="login-spinner" />
@@ -116,7 +116,7 @@ export default function LoginPage() {
         }
         .login-left {
           flex: 1;
-          background: linear-gradient(135deg, #5A0099 0%, #820AD1 40%, #A855F7 100%);
+          background: linear-gradient(135deg, #92400E 0%, #D97706 40%, #F59E0B 100%);
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -226,7 +226,7 @@ export default function LoginPage() {
           border-color: var(--color-primary);
           background: var(--color-primary-muted);
           transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(130,10,209,0.12);
+          box-shadow: 0 8px 24px rgba(217,119,6,0.15);
         }
         .login-profile-btn:disabled {
           opacity: 0.6;

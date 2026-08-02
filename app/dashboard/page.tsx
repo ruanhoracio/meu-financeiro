@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import type { Lancamento, Categoria } from '@/lib/database.types'
 
-const COLORS = ['#820AD1','#A855F7','#EC4899','#EF4444','#F97316','#F59E0B','#10B981','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#14B8A6']
+const COLORS = ['#D97706','#F59E0B','#EC4899','#EF4444','#F97316','#FBBF24','#10B981','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#14B8A6']
 
 const MESES_NOMES = [
   '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -101,23 +101,52 @@ export default function DashboardPage() {
   }
 
   async function loadRenda() {
+    async function loadFreelaTotal(donoFilter?: string) {
+      let q = supabase.from('freelas').select('valor').eq('recebido', true).eq('mes', mes).eq('ano', ano)
+      if (donoFilter) q = q.eq('dono', donoFilter)
+      const { data } = await q
+      return (data || []).reduce((s: number, f: any) => s + Number(f.valor), 0)
+    }
+
+    async function loadPrevFreelaTotal(donoFilter?: string) {
+      let q = supabase.from('freelas').select('valor').eq('recebido', true).eq('mes', prevMes).eq('ano', prevAno)
+      if (donoFilter) q = q.eq('dono', donoFilter)
+      const { data } = await q
+      return (data || []).reduce((s: number, f: any) => s + Number(f.valor), 0)
+    }
+
     if (currentView === 'conjunto') {
-      const { data: dEu } = await supabase.from('rendas').select('valor').eq('dono', 'eu').eq('mes', mes).eq('ano', ano).maybeSingle()
-      const { data: dEsposa } = await supabase.from('rendas').select('valor').eq('dono', 'esposa').eq('mes', mes).eq('ano', ano).maybeSingle()
-      const totalRenda = (dEu?.valor || 0) + (dEsposa?.valor || 0)
+      const [dEu, dEsposa, fEu, fEsposa] = await Promise.all([
+        supabase.from('rendas').select('valor').eq('dono', 'eu').eq('mes', mes).eq('ano', ano).maybeSingle(),
+        supabase.from('rendas').select('valor').eq('dono', 'esposa').eq('mes', mes).eq('ano', ano).maybeSingle(),
+        loadFreelaTotal('eu'),
+        loadFreelaTotal('esposa'),
+      ])
+      const totalRenda = (dEu.data?.valor || 0) + (dEsposa.data?.valor || 0) + fEu + fEsposa
       setRenda(totalRenda)
       setRendaInput(totalRenda.toString())
 
-      const { data: pEu } = await supabase.from('rendas').select('valor').eq('dono', 'eu').eq('mes', prevMes).eq('ano', prevAno).maybeSingle()
-      const { data: pEsposa } = await supabase.from('rendas').select('valor').eq('dono', 'esposa').eq('mes', prevMes).eq('ano', prevAno).maybeSingle()
-      setPrevRenda((pEu?.valor || 0) + (pEsposa?.valor || 0))
+      const [pEu, pEsposa, pfEu, pfEsposa] = await Promise.all([
+        supabase.from('rendas').select('valor').eq('dono', 'eu').eq('mes', prevMes).eq('ano', prevAno).maybeSingle(),
+        supabase.from('rendas').select('valor').eq('dono', 'esposa').eq('mes', prevMes).eq('ano', prevAno).maybeSingle(),
+        loadPrevFreelaTotal('eu'),
+        loadPrevFreelaTotal('esposa'),
+      ])
+      setPrevRenda((pEu.data?.valor || 0) + (pEsposa.data?.valor || 0) + pfEu + pfEsposa)
     } else {
-      const { data } = await supabase.from('rendas').select('valor').eq('dono', currentView).eq('mes', mes).eq('ano', ano).maybeSingle()
-      setRenda(data?.valor || 0)
-      setRendaInput(data?.valor?.toString() || '')
+      const [d, f] = await Promise.all([
+        supabase.from('rendas').select('valor').eq('dono', currentView).eq('mes', mes).eq('ano', ano).maybeSingle(),
+        loadFreelaTotal(currentView),
+      ])
+      const totalRenda = (d.data?.valor || 0) + f
+      setRenda(totalRenda)
+      setRendaInput(totalRenda.toString())
 
-      const { data: pData } = await supabase.from('rendas').select('valor').eq('dono', currentView).eq('mes', prevMes).eq('ano', prevAno).maybeSingle()
-      setPrevRenda(pData?.valor || 0)
+      const [pd, pf] = await Promise.all([
+        supabase.from('rendas').select('valor').eq('dono', currentView).eq('mes', prevMes).eq('ano', prevAno).maybeSingle(),
+        loadPrevFreelaTotal(currentView),
+      ])
+      setPrevRenda((pd.data?.valor || 0) + pf)
     }
   }
 
@@ -215,7 +244,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="page-title">Dashboard Financeiro</h1>
           <p className="page-subtitle">
-            Visão Geral e Comparativo — {MESES_NOMES[mes]} / {ano} ({currentView === 'eu' ? user?.nome || 'Eu' : currentView === 'esposa' ? 'Esposa' : 'Conjunto (Casal)'})
+            Visão Geral e Comparativo — {MESES_NOMES[mes]} / {ano} ({currentView === 'eu' ? user?.nome || 'Ruan' : currentView === 'esposa' ? 'Karol' : 'Conjunto (Ruan & Karol)'})
           </p>
         </div>
         <button

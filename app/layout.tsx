@@ -4,20 +4,21 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { HideValuesProvider } from '@/contexts/HideValuesContext'
 import { MonthProvider } from '@/contexts/MonthContext'
+import SplashWrapper from '@/components/SplashWrapper'
 
 export const metadata: Metadata = {
-  title: 'Meu Financeiro — Controle Financeiro do Casal',
-  description: 'Aplicativo de controle financeiro pessoal e do casal. Gerencie gastos, metas e extratos bancários em um só lugar.',
-  keywords: 'finanças pessoais, controle financeiro, orçamento, gastos, metas, casal',
+  title: 'NovaCash',
+  description: 'NovaCash — Controle financeiro inteligente. Gerencie gastos, metas e extratos em um só lugar.',
+  keywords: 'finanças pessoais, controle financeiro, orçamento, gastos, metas, NovaCash',
   icons: {
-    icon: '/logo.png',
+    icon: '/logo.svg',
     apple: '/icons/icon-180x180.png',
   },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Meu Financeiro',
+    title: 'NovaCash',
   },
 }
 
@@ -33,15 +34,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
-        <ThemeProvider>
-          <AuthProvider>
-            <MonthProvider>
-              <HideValuesProvider>
-                {children}
-              </HideValuesProvider>
-            </MonthProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <SplashWrapper>
+          <ThemeProvider>
+            <AuthProvider>
+              <MonthProvider>
+                <HideValuesProvider>
+                  {children}
+                </HideValuesProvider>
+              </MonthProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </SplashWrapper>
       </body>
     </html>
   )

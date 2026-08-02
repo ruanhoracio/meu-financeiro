@@ -8,7 +8,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react'
 import type { Categoria } from '@/lib/database.types'
 
 const ICONES = ['📦','📈','🏠','🛒','🍔','🚗','💊','📺','📱','💡','📚','🎭','👗','🏡','🐾','✈️','🎮','💰','🏋️','🎁','💄','💳']
-const CORES = ['#820AD1','#10B981','#EF4444','#F59E0B','#3B82F6','#EC4899','#06B6D4','#8B5CF6','#F97316','#6366F1','#14B8A6','#84CC16','#F43F5E','#A855F7','#FB923C']
+const CORES = ['#D97706','#10B981','#EF4444','#F59E0B','#3B82F6','#EC4899','#06B6D4','#8B5CF6','#F97316','#6366F1','#14B8A6','#84CC16','#F43F5E','#FBBF24','#FB923C']
 
 export default function CategoriasPage() {
   const { user, loading } = useAuth()
@@ -16,7 +16,7 @@ export default function CategoriasPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState({ nome: '', icone: '📦', cor: '#820AD1', keywords: '' })
+  const [form, setForm] = useState({ nome: '', icone: '📦', cor: '#D97706', keywords: '' })
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type: string } | null>(null)
 
@@ -34,13 +34,13 @@ export default function CategoriasPage() {
   }
 
   function openNew() {
-    setForm({ nome: '', icone: '📦', cor: '#820AD1', keywords: '' })
+    setForm({ nome: '', icone: '📦', cor: '#D97706', keywords: '' })
     setEditingId(null)
     setShowModal(true)
   }
 
   function openEdit(c: Categoria) {
-    setForm({ nome: c.nome, icone: c.icone || '📦', cor: c.cor || '#820AD1', keywords: (c.keywords || []).join(', ') })
+    setForm({ nome: c.nome, icone: c.icone || '📦', cor: c.cor || '#D97706', keywords: (c.keywords || []).join(', ') })
     setEditingId(c.id)
     setShowModal(true)
   }

@@ -82,6 +82,19 @@ CREATE TABLE IF NOT EXISTS aportes_cofrinhos (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 7. TABELA DE FREELAS (SERVIÇOS EXTRAS)
+CREATE TABLE IF NOT EXISTS freelas (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID,
+  dono TEXT NOT NULL CHECK (dono IN ('eu', 'esposa')),
+  mes INTEGER NOT NULL CHECK (mes BETWEEN 1 AND 12),
+  ano INTEGER NOT NULL,
+  nome_servico TEXT NOT NULL,
+  valor DECIMAL(10,2) NOT NULL DEFAULT 0,
+  recebido BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================
 -- REMOVER RESTRIÇÕES DE FOREIGN KEY RÍGIDAS
 -- =============================================
@@ -89,6 +102,7 @@ ALTER TABLE perfis DROP CONSTRAINT IF EXISTS perfis_id_fkey;
 ALTER TABLE lancamentos DROP CONSTRAINT IF EXISTS lancamentos_user_id_fkey;
 ALTER TABLE rendas DROP CONSTRAINT IF EXISTS rendas_user_id_fkey;
 ALTER TABLE aportes_cofrinhos DROP CONSTRAINT IF EXISTS aportes_cofrinhos_user_id_fkey;
+ALTER TABLE freelas DROP CONSTRAINT IF EXISTS freelas_user_id_fkey;
 ALTER TABLE categorias DROP CONSTRAINT IF EXISTS categorias_created_by_fkey;
 
 ALTER TABLE lancamentos ALTER COLUMN user_id DROP NOT NULL;
@@ -104,6 +118,7 @@ ALTER TABLE lancamentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rendas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cofrinhos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE aportes_cofrinhos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE freelas ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Permitir tudo perfis" ON perfis;
 DROP POLICY IF EXISTS "Permitir tudo categorias" ON categorias;
@@ -133,6 +148,7 @@ CREATE POLICY "Permitir tudo lancamentos" ON lancamentos FOR ALL USING (true) WI
 CREATE POLICY "Permitir tudo rendas" ON rendas FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir tudo cofrinhos" ON cofrinhos FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir tudo aportes" ON aportes_cofrinhos FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir tudo freelas" ON freelas FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 -- TRIGGER DO COFRINHO

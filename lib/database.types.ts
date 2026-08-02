@@ -75,6 +75,21 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['aportes_cofrinhos']['Row'], 'id'>
         Update: Partial<Database['public']['Tables']['aportes_cofrinhos']['Insert']>
       }
+      freelas: {
+        Row: {
+          id: string
+          user_id: string | null
+          dono: 'eu' | 'esposa'
+          mes: number
+          ano: number
+          nome_servico: string
+          valor: number
+          recebido: boolean
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['freelas']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['freelas']['Insert']>
+      }
     }
   }
 }
@@ -84,6 +99,7 @@ export type Categoria = Database['public']['Tables']['categorias']['Row']
 export type Renda = Database['public']['Tables']['rendas']['Row']
 export type Cofrinho = Database['public']['Tables']['cofrinhos']['Row']
 export type AporteCofrinho = Database['public']['Tables']['aportes_cofrinhos']['Row']
+export type Freela = Database['public']['Tables']['freelas']['Row']
 
 export type DonoType = 'eu' | 'esposa' | 'conjunto'
 export type StatusType = 'pago' | 'aguardando' | 'proximo_mes'

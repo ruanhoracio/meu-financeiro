@@ -21,7 +21,7 @@ export default function CofrinhosPage() {
   const [valorAlvo, setValorAlvo] = useState('')
   const [dataFim, setDataFim] = useState('')
   const [icone, setIcone] = useState('🏆')
-  const [cor, setCor] = useState('#820AD1')
+  const [cor, setCor] = useState('#D97706')
   const [descricao, setDescricao] = useState('')
   const [aporteValor, setAporteValor] = useState('')
   const [aporteObs, setAporteObs] = useState('')
@@ -30,7 +30,7 @@ export default function CofrinhosPage() {
   const [toast, setToast] = useState<{ msg: string; type: string } | null>(null)
 
   const ICONES = ['🏆','✈️','🏠','🚗','📱','💻','🎓','💍','🐣','🏖️','🛍️','💰','🎯','🏋️','🎪']
-  const CORES = ['#820AD1','#10B981','#EF4444','#F59E0B','#3B82F6','#EC4899','#06B6D4','#F97316']
+  const CORES = ['#D97706','#10B981','#EF4444','#F59E0B','#3B82F6','#EC4899','#06B6D4','#F97316']
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
@@ -46,7 +46,7 @@ export default function CofrinhosPage() {
     setValorAlvo('')
     setDataFim('')
     setIcone('🏆')
-    setCor('#820AD1')
+    setCor('#D97706')
     setDescricao('')
   }
 
@@ -71,7 +71,7 @@ export default function CofrinhosPage() {
     setValorAlvo(String(c.valor_alvo))
     setDataFim(c.data_fim || '')
     setIcone(c.icone || '🏆')
-    setCor(c.cor || '#820AD1')
+    setCor(c.cor || '#D97706')
     setDescricao(c.descricao || '')
     setShowModal(true)
   }
@@ -207,7 +207,7 @@ export default function CofrinhosPage() {
               <div key={c.id} className="cofrinho-card">
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: `${c.cor || '#820AD1'}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: `${c.cor || '#D97706'}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
                       {c.icone}
                     </div>
                     <div>
@@ -231,7 +231,7 @@ export default function CofrinhosPage() {
                     <span style={{ fontWeight: 700, color: c.cor || 'var(--color-primary)' }}>{pct.toFixed(1)}%</span>
                   </div>
                   <div className="progress-bar" style={{ height: 10 }}>
-                    <div className="progress-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${c.cor || '#820AD1'}, ${c.cor || '#820AD1'}cc)` }} />
+                    <div className="progress-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${c.cor || '#D97706'}, ${c.cor || '#D97706'}cc)` }} />
                   </div>
                 </div>
 

@@ -58,7 +58,7 @@ export default function HistoricoPage() {
   lancamentosAtual.forEach(l => {
     const cat = categorias.find(c => c.id === l.categoria_id)
     const nome = cat?.nome || 'Outros'
-    if (!catMap[nome]) catMap[nome] = { nome, icone: cat?.icone || '📦', cor: cat?.cor || '#820AD1', total: 0 }
+    if (!catMap[nome]) catMap[nome] = { nome, icone: cat?.icone || '📦', cor: cat?.cor || '#D97706', total: 0 }
     catMap[nome].total += Number(l.valor)
   })
   const ranking = Object.values(catMap).sort((a, b) => b.total - a.total)

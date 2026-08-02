@@ -1,14 +1,20 @@
 {
-  "name": "Meu Financeiro",
-  "short_name": "Meu Financeiro",
-  "description": "Controle Financeiro do Casal",
+  "name": "NovaCash",
+  "short_name": "NovaCash",
+  "description": "Controle financeiro inteligente",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#6F75FB",
+  "background_color": "#171717",
+  "theme_color": "#F59E0B",
   "orientation": "portrait",
   "lang": "pt-BR",
   "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
@@ -19,12 +25,6 @@
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

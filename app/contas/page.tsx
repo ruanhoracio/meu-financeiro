@@ -46,7 +46,7 @@ export default function ContasPage() {
   }, [mes, ano, currentView, user])
 
   async function loadData() {
-    let query = supabase.from('lancamentos').select('*').eq('mes', mes).eq('ano', ano)
+    let query = supabase.from('lancamentos').select('*').eq('mes', mes).eq('ano', ano).neq('origem', 'cartao')
     if (currentView !== 'conjunto') {
       query = query.or(`dono.eq.${currentView},dono.eq.conjunto`)
     }

@@ -164,7 +164,7 @@ export default function ImportarExtratoPage() {
             ou clique para escolher o arquivo baixado do app do Nubank / banco
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <span className="badge" style={{ background: '#820AD120', color: '#820AD1', fontWeight: 600 }}>🟣 Nubank CSV</span>
+            <span className="badge" style={{ background: '#D9770620', color: '#D97706', fontWeight: 600 }}>🟠 Nubank CSV</span>
             <span className="badge" style={{ background: '#F9731620', color: '#F97316', fontWeight: 600 }}>🟧 Itaú / Inter</span>
             <span className="badge" style={{ background: '#3B82F620', color: '#3B82F6', fontWeight: 600 }}>🟦 Qualquer Banco (CSV)</span>
           </div>

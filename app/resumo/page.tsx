@@ -107,13 +107,13 @@ export default function ResumoPage() {
   }
 
   const slides = [
-    <div key={0} style={slideStyle('#820AD1', '#5A0099')}>
+    <div key={0} style={slideStyle('#D97706', '#92400E')}>
       <div style={slideLabel}>💳 Total gasto em {formatMonth(data.mes, data.ano)}</div>
       <div style={slideValue}>{mask(formatCurrency(data.totalAtual))}</div>
       <div style={slideSubtext}>{data.rendaVal > 0 ? `de ${mask(formatCurrency(data.rendaVal))} de renda` : 'renda não informada'}</div>
     </div>,
 
-    <div key={1} style={slideStyle('#4C1D95', '#6D28D9')}>
+    <div key={1} style={slideStyle('#B45309', '#78350F')}>
       <div style={slideLabel}>🏆 Categoria que mais pesou</div>
       <div style={{ fontSize: '3rem', margin: '1rem 0' }}>
         {categorias.find(c => c.nome === data.topCat?.[0])?.icone || '📦'}
@@ -151,7 +151,7 @@ export default function ResumoPage() {
       </div>
     </div>,
 
-    <div key={4} style={slideStyle('#3B0764', '#6B21A8')}>
+    <div key={4} style={slideStyle('#451A03', '#78350F')}>
       <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🎊</div>
       <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', textAlign: 'center', lineHeight: 1.4, maxWidth: 400 }}>
         {data.frase}
