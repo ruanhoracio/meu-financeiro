@@ -7,7 +7,7 @@ import { useHideValues } from '@/contexts/HideValuesContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency, getStatusLabel, getTipoLabel } from '@/lib/utils'
-import { Plus, Check, Trash2, Copy, Pencil, ChevronDown, Filter } from 'lucide-react'
+import { Plus, Check, Trash2, Copy, Pencil, ChevronDown, Filter, RotateCcw } from 'lucide-react'
 import type { Lancamento, Categoria, ViewType } from '@/lib/database.types'
 
 const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
@@ -113,6 +113,7 @@ export default function ContasPage() {
     if (editingId) {
       const updateData = {
         ...baseData,
+        status: form.status,
         parcela_atual: form.tipo === 'parcelado' ? form.parcela_atual : null,
         parcelas_total: form.tipo === 'parcelado' ? form.parcelas_total : null,
       }
@@ -158,10 +159,15 @@ export default function ContasPage() {
     }
   }
 
-  async function markAsPaid(id: string) {
-    await supabase.from('lancamentos').update({ status: 'pago' }).eq('id', id)
-    showToast('Marcado como pago! ✅', 'success')
-    loadData()
+  async function toggleStatus(l: Lancamento) {
+    const newStatus = l.status === 'pago' ? 'aguardando' : 'pago'
+    const { error } = await supabase.from('lancamentos').update({ status: newStatus }).eq('id', l.id)
+    if (!error) {
+      showToast(newStatus === 'pago' ? 'Marcado como pago! ✅' : 'Alterado para aguardando! ⏳', 'success')
+      loadData()
+    } else {
+      showToast('Erro ao atualizar status.', 'error')
+    }
   }
 
   async function deleteLancamento(id: string) {
@@ -385,7 +391,12 @@ export default function ContasPage() {
                        l.parcelas_total ? `${l.parcela_atual || 1}/${l.parcelas_total}` : '—'}
                     </td>
                     <td>
-                      <span className={`badge badge-${l.status === 'proximo_mes' ? 'proximo' : l.status}`}>
+                      <span
+                        className={`badge badge-${l.status === 'proximo_mes' ? 'proximo' : l.status}`}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => toggleStatus(l)}
+                        title="Clique para alternar entre Pago e Aguardando"
+                      >
                         {l.status === 'pago' ? '✅ Pago' : l.status === 'aguardando' ? '⏳ Aguardando' : '📅 Próximo mês'}
                       </span>
                     </td>
@@ -394,16 +405,18 @@ export default function ContasPage() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        {l.status !== 'pago' && (
-                          <button
-                            className="btn btn-icon btn-sm"
-                            title="Marcar como pago"
-                            onClick={() => markAsPaid(l.id)}
-                            style={{ background: 'var(--color-status-pago-bg)', color: 'var(--color-status-pago)', width: 30, height: 30 }}
-                          >
-                            <Check size={14} />
-                          </button>
-                        )}
+                        <button
+                          className="btn btn-icon btn-sm"
+                          title={l.status === 'pago' ? 'Voltar para aguardando' : 'Marcar como pago'}
+                          onClick={() => toggleStatus(l)}
+                          style={{
+                            background: l.status === 'pago' ? 'var(--color-status-aguardando-bg)' : 'var(--color-status-pago-bg)',
+                            color: l.status === 'pago' ? 'var(--color-status-aguardando)' : 'var(--color-status-pago)',
+                            width: 30, height: 30
+                          }}
+                        >
+                          {l.status === 'pago' ? <RotateCcw size={13} /> : <Check size={14} />}
+                        </button>
                         <button
                           className="btn btn-icon btn-sm btn-ghost"
                           title="Editar"
