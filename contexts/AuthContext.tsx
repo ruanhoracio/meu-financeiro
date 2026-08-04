@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInAs = async (dono: 'eu' | 'esposa', inputSenha?: string) => {
     const savedPin = getSavedPin(dono)
 
-    if (inputSenha !== undefined && inputSenha !== savedPin && inputSenha !== '1234') {
+    if (inputSenha !== undefined && inputSenha !== savedPin) {
       return { error: 'Senha incorreta. Tente novamente.' }
     }
 

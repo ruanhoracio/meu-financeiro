@@ -164,7 +164,7 @@ export default function LoginPage() {
                     textAlign: 'center', letterSpacing: showPassword ? 'normal' : '0.25em',
                     fontWeight: 700
                   }}
-                  placeholder="Digite sua senha (ex: 1234)"
+                  placeholder="Digite sua senha de acesso"
                   value={senhaInput}
                   onChange={e => setSenhaInput(e.target.value)}
                   autoFocus
@@ -180,14 +180,6 @@ export default function LoginPage() {
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              </div>
-
-              <div style={{
-                background: 'var(--color-primary-muted)', padding: '0.5rem 0.75rem',
-                borderRadius: 10, fontSize: '0.75rem', color: 'var(--color-primary)',
-                marginBottom: '1.25rem', textAlign: 'center', fontWeight: 600
-              }}>
-                💡 Senha de acesso inicial: <strong>1234</strong>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
