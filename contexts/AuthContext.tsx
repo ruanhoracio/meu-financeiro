@@ -45,40 +45,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentView, setCurrentView] = useState<ViewType>('eu')
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        await loadUserProfile(session.user.id, session.user.email!)
-      } else {
-        const local = localStorage.getItem('meu_financeiro_user')
-        if (local) {
-          try {
-            const u = JSON.parse(local)
-            await loadUserProfile(u.id, u.email)
-          } catch {
-            setLoading(false)
-          }
-        } else {
-          setLoading(false)
-        }
+    // Carregar sessão salva apenas se existir no localStorage
+    const local = typeof window !== 'undefined' ? localStorage.getItem('meu_financeiro_user') : null
+    if (local) {
+      try {
+        const u = JSON.parse(local)
+        loadUserProfile(u.id, u.email)
+      } catch {
+        setLoading(false)
       }
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
-      if (session?.user) {
-        await loadUserProfile(session.user.id, session.user.email!)
-      }
-    })
-
-    return () => subscription.unsubscribe()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   async function loadUserProfile(id: string, email: string) {
     const dono = email.includes('esposa') ? 'esposa' : 'eu'
     const defaultNome = dono === 'esposa' ? 'Karol' : 'Ruan'
 
+    // Explicit query without select('*') to prevent schema missing column errors
     const { data: perfil } = await supabase
       .from('perfis')
-      .select('*')
+      .select('id, dono, nome, avatar_url, updated_at')
       .eq('dono', dono)
       .order('updated_at', { ascending: false })
       .limit(1)
@@ -90,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!perfil) {
       try {
         await supabase.from('perfis').upsert(
-          { id: realId, dono, nome: defaultNome, senha: '1234' },
+          { id: realId, dono, nome: defaultNome },
           { onConflict: 'dono' }
         )
       } catch {}
@@ -103,23 +91,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }
 
+  const getSavedPin = (dono: 'eu' | 'esposa'): string => {
+    if (typeof window === 'undefined') return '1234'
+    const saved = localStorage.getItem(`meu_financeiro_pin_${dono}`)
+    return saved || '1234'
+  }
+
   const signInAs = async (dono: 'eu' | 'esposa', inputSenha?: string) => {
-    const { email, defaultNome } = PROFILES[dono]
+    const savedPin = getSavedPin(dono)
 
-    // Buscar perfil no Supabase para validar a senha
-    const { data: perfil } = await supabase
-      .from('perfis')
-      .select('*')
-      .eq('dono', dono)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    const senhaCadastrada = perfil?.senha || '1234'
-
-    if (inputSenha !== undefined && inputSenha !== senhaCadastrada && inputSenha !== '1234') {
+    if (inputSenha !== undefined && inputSenha !== savedPin && inputSenha !== '1234') {
       return { error: 'Senha incorreta. Tente novamente.' }
     }
+
+    const { email, defaultNome } = PROFILES[dono]
 
     for (const pwd of PASSWORDS) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: pwd })
@@ -135,21 +120,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     if (!suErr && suData.user) {
-      await supabase.from('perfis').upsert({ id: suData.user.id, dono, nome: defaultNome, senha: '1234' })
+      await supabase.from('perfis').upsert({ id: suData.user.id, dono, nome: defaultNome })
       await loadUserProfile(suData.user.id, email)
       return { error: null }
     }
 
     const fallbackId = dono === 'eu' ? '00000000-0000-0000-0000-000000000001' : '00000000-0000-0000-0000-000000000002'
 
-    const nomeFinal = perfil?.nome || defaultNome
+    const { data: perfilExistente } = await supabase
+      .from('perfis')
+      .select('nome')
+      .eq('dono', dono)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const nomeFinal = perfilExistente?.nome || defaultNome
     const localUser: User = { id: fallbackId, email, dono, nome: nomeFinal }
     setUser(localUser)
     setCurrentView(dono)
     localStorage.setItem('meu_financeiro_user', JSON.stringify(localUser))
 
     try {
-      await supabase.from('perfis').upsert({ id: fallbackId, dono, nome: nomeFinal, senha: senhaCadastrada })
+      await supabase.from('perfis').upsert({ id: fallbackId, dono, nome: nomeFinal })
     } catch {}
 
     return { error: null }
@@ -185,17 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateSenha = async (novaSenha: string) => {
     if (!user) return { error: 'Usuário não autenticado' }
     try {
-      const { error } = await supabase.from('perfis').upsert(
-        {
-          id: user.id,
-          dono: user.dono,
-          nome: user.nome,
-          senha: novaSenha,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      )
-      if (error) throw error
+      localStorage.setItem(`meu_financeiro_pin_${user.dono}`, novaSenha)
       return { error: null }
     } catch (e: any) {
       console.error('Erro ao atualizar senha:', e)
