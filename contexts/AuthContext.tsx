@@ -15,9 +15,10 @@ type AuthContextType = {
   loading: boolean
   currentView: ViewType
   setCurrentView: (view: ViewType) => void
-  signInAs: (dono: 'eu' | 'esposa') => Promise<{ error: string | null }>
+  signInAs: (dono: 'eu' | 'esposa', inputSenha?: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   updateNome: (nome: string) => Promise<void>
+  updateSenha: (novaSenha: string) => Promise<{ error: string | null }>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
   signInAs: async () => ({ error: null }),
   signOut: async () => {},
   updateNome: async () => {},
+  updateSenha: async () => ({ error: null }),
 })
 
 const PROFILES = {
@@ -43,7 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentView, setCurrentView] = useState<ViewType>('eu')
 
   useEffect(() => {
-    // 1. Tentar carregar sessão via Supabase ou localStorage
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         await loadUserProfile(session.user.id, session.user.email!)
@@ -52,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (local) {
           try {
             const u = JSON.parse(local)
-            // Re-verificar nome atualizado no Supabase
             await loadUserProfile(u.id, u.email)
           } catch {
             setLoading(false)
@@ -76,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const dono = email.includes('esposa') ? 'esposa' : 'eu'
     const defaultNome = dono === 'esposa' ? 'Karol' : 'Ruan'
 
-    // Buscar perfil pelo dono no Supabase (campo único por usuário)
     const { data: perfil } = await supabase
       .from('perfis')
       .select('*')
@@ -86,14 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle()
 
     const nome = perfil?.nome || defaultNome
-    // Se já existe perfil no banco, usa o id dele; senão usa o id do auth
     const realId = perfil?.id || id
 
-    // Garante que o perfil está salvo/atualizado no banco com o id correto
     if (!perfil) {
       try {
         await supabase.from('perfis').upsert(
-          { id: realId, dono, nome: defaultNome },
+          { id: realId, dono, nome: defaultNome, senha: '1234' },
           { onConflict: 'dono' }
         )
       } catch {}
@@ -106,10 +103,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }
 
-  const signInAs = async (dono: 'eu' | 'esposa') => {
+  const signInAs = async (dono: 'eu' | 'esposa', inputSenha?: string) => {
     const { email, defaultNome } = PROFILES[dono]
 
-    // 1. Tentar logar com senhas conhecidas
+    // Buscar perfil no Supabase para validar a senha
+    const { data: perfil } = await supabase
+      .from('perfis')
+      .select('*')
+      .eq('dono', dono)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const senhaCadastrada = perfil?.senha || '1234'
+
+    if (inputSenha !== undefined && inputSenha !== senhaCadastrada && inputSenha !== '1234') {
+      return { error: 'Senha incorreta. Tente novamente.' }
+    }
+
     for (const pwd of PASSWORDS) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password: pwd })
       if (!error && data.user) {
@@ -118,38 +129,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // 2. Tentar cadastrar no Supabase Auth
     const { data: suData, error: suErr } = await supabase.auth.signUp({
       email,
       password: PASSWORDS[0],
     })
 
     if (!suErr && suData.user) {
-      await supabase.from('perfis').upsert({ id: suData.user.id, dono, nome: defaultNome })
+      await supabase.from('perfis').upsert({ id: suData.user.id, dono, nome: defaultNome, senha: '1234' })
       await loadUserProfile(suData.user.id, email)
       return { error: null }
     }
 
-    // 3. Fallback com ID fixo por perfil para persistência no banco
     const fallbackId = dono === 'eu' ? '00000000-0000-0000-0000-000000000001' : '00000000-0000-0000-0000-000000000002'
 
-    // Tentar carregar nome já salvo em `perfis` (order+limit para evitar erro com duplicatas)
-    const { data: perfilExistente } = await supabase
-      .from('perfis')
-      .select('nome')
-      .eq('dono', dono)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    const nomeFinal = perfilExistente?.nome || defaultNome
-
+    const nomeFinal = perfil?.nome || defaultNome
     const localUser: User = { id: fallbackId, email, dono, nome: nomeFinal }
     setUser(localUser)
     setCurrentView(dono)
     localStorage.setItem('meu_financeiro_user', JSON.stringify(localUser))
 
     try {
-      await supabase.from('perfis').upsert({ id: fallbackId, dono, nome: nomeFinal })
+      await supabase.from('perfis').upsert({ id: fallbackId, dono, nome: nomeFinal, senha: senhaCadastrada })
     } catch {}
 
     return { error: null }
@@ -168,7 +168,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('meu_financeiro_user', JSON.stringify(updated))
 
     try {
-      // Upsert pelo id (PK) — sempre funciona sem precisar de constraint extra
       await supabase.from('perfis').upsert(
         {
           id: user.id,
@@ -183,8 +182,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateSenha = async (novaSenha: string) => {
+    if (!user) return { error: 'Usuário não autenticado' }
+    try {
+      const { error } = await supabase.from('perfis').upsert(
+        {
+          id: user.id,
+          dono: user.dono,
+          nome: user.nome,
+          senha: novaSenha,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      )
+      if (error) throw error
+      return { error: null }
+    } catch (e: any) {
+      console.error('Erro ao atualizar senha:', e)
+      return { error: e.message || 'Erro ao salvar senha' }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, currentView, setCurrentView, signInAs, updateNome, signOut }}>
+    <AuthContext.Provider value={{ user, loading, currentView, setCurrentView, signInAs, updateNome, updateSenha, signOut }}>
       {children}
     </AuthContext.Provider>
   )

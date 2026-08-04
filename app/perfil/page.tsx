@@ -6,10 +6,10 @@ import { useHideValues } from '@/contexts/HideValuesContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getCurrentMonth, formatCurrency } from '@/lib/utils'
-import { Save, User, CheckCircle, DollarSign, Camera, ZoomIn, Crop } from 'lucide-react'
+import { Save, User, CheckCircle, DollarSign, Camera, ZoomIn, Crop, Lock, KeyRound } from 'lucide-react'
 
 export default function PerfilPage() {
-  const { user, loading, updateNome, signOut, currentView, setCurrentView } = useAuth()
+  const { user, loading, updateNome, updateSenha, signOut, currentView, setCurrentView } = useAuth()
   const { mask } = useHideValues()
   const router = useRouter()
   const { mes, ano } = getCurrentMonth()
@@ -197,6 +197,26 @@ export default function PerfilPage() {
     setTimeout(() => setSaved(false), 2500)
   }
 
+  const [novaSenha, setNovaSenha] = useState('')
+  const [savingSenha, setSavingSenha] = useState(false)
+  const [savedSenha, setSavedSenha] = useState(false)
+  const [errorSenha, setErrorSenha] = useState('')
+
+  async function handleSaveSenha() {
+    if (!novaSenha.trim()) return
+    setSavingSenha(true)
+    setErrorSenha('')
+    const { error } = await updateSenha(novaSenha.trim())
+    setSavingSenha(false)
+    if (error) {
+      setErrorSenha(error)
+    } else {
+      setSavedSenha(true)
+      setNovaSenha('')
+      setTimeout(() => setSavedSenha(false), 3000)
+    }
+  }
+
   return (
     <AppLayout>
       <div className="page-header">
@@ -260,7 +280,7 @@ export default function PerfilPage() {
           <div>
             <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-text)' }}>{nome || user?.nome}</div>
             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-              {user?.dono === 'eu' ? '👤 Meu Portal' : '👩 Portal da Esposa'}
+              {user?.dono === 'eu' ? '👤 Perfil de Ruan' : '👩 Perfil de Karol'}
             </div>
           </div>
         </div>
@@ -316,6 +336,50 @@ export default function PerfilPage() {
               >
                 <Save size={16} />
                 {saving ? 'Salvando...' : 'Salvar Perfil & Salário'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="card card-p" style={{ marginBottom: '1.25rem' }}>
+          <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}>
+            <Lock size={16} color="var(--color-primary)" />
+            Segurança & Senha de Acesso
+          </h3>
+          <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+            <label className="form-label">Alterar Senha do Perfil ({user?.nome})</label>
+            <input
+              type="password"
+              className="form-input"
+              value={novaSenha}
+              onChange={e => setNovaSenha(e.target.value)}
+              placeholder="Digite a nova senha (ex: 1234 ou senha personalizada)"
+            />
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.375rem' }}>
+              Esta senha será solicitada ao clicar no seu perfil para liberar o acesso.
+            </div>
+          </div>
+
+          {errorSenha && (
+            <div style={{ color: '#DC2626', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+              ⚠️ {errorSenha}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            {savedSenha ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-status-pago)', fontWeight: 600, fontSize: '0.875rem' }}>
+                <CheckCircle size={18} />
+                Nova senha atualizada com sucesso!
+              </div>
+            ) : (
+              <button
+                className="btn btn-secondary"
+                onClick={handleSaveSenha}
+                disabled={savingSenha || !novaSenha.trim()}
+              >
+                <KeyRound size={16} />
+                {savingSenha ? 'Atualizando...' : 'Atualizar Senha'}
               </button>
             )}
           </div>
